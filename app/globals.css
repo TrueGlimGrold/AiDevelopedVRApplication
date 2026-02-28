@@ -4,9 +4,15 @@
   background: #12161d;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 1rem;
+  background: #12161d;
+  color: #f2f5f8;
 }
 
 main {
@@ -46,29 +52,6 @@ button {
   margin-bottom: 0.5rem;
 }
 
-<<<<<<< ours
-.camera-controls {
-  margin-bottom: 0.75rem;
-}
-
-.camera-controls button {
-  margin-top: 0.35rem;
-}
-
-.camera-preview {
-  width: 100%;
-  border-radius: 6px;
-  border: 1px solid #3b4554;
-  margin: 0.25rem 0 0.75rem;
-  background: #0d1219;
-}
-
-.hidden {
-  display: none;
-}
-
-=======
->>>>>>> theirs
 .capture-item {
   border: 1px solid #323d4c;
   border-radius: 8px;
@@ -91,14 +74,6 @@ button {
   padding: 0.6rem;
 }
 
-.warn {
-  color: #f3bf4f;
-}
-
-.low {
-  color: #ff7d7d;
-}
-
-.good {
-  color: #7ce9a1;
-}
+.warn { color: #f3bf4f; }
+.low { color: #ff7d7d; }
+.good { color: #7ce9a1; }

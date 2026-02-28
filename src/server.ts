@@ -1,6 +1,7 @@
 import { join } from "node:path";
 
 const publicDir = join(process.cwd(), "public");
+<<<<<<< ours
 const GEMINI_MODEL = "gemini-2.0-flash";
 
 type ParseTextRequest = {
@@ -11,6 +12,8 @@ type ParseTextResponse = {
   parsedText: string;
   provider: "gemini" | "ocr";
 };
+=======
+>>>>>>> theirs
 
 type UploadMessage = {
   type: "capture_item";
@@ -30,6 +33,7 @@ type AckMessage = {
 };
 
 const server = Bun.serve<{ path: string }>({
+<<<<<<< ours
   hostname: "0.0.0.0",
   port: Number(process.env.PORT ?? 3000),
   async fetch(req, server) {
@@ -39,6 +43,12 @@ const server = Bun.serve<{ path: string }>({
       return handleParseText(req);
     }
 
+=======
+  port: Number(process.env.PORT ?? 3000),
+  fetch(req, server) {
+    const url = new URL(req.url);
+
+>>>>>>> theirs
     if (url.pathname === "/ws/upload") {
       const upgraded = server.upgrade(req, { data: { path: url.pathname } });
       if (upgraded) {
@@ -83,6 +93,7 @@ const server = Bun.serve<{ path: string }>({
 });
 
 console.log(`Prototype app running at http://localhost:${server.port}`);
+<<<<<<< ours
 
 async function handleParseText(req: Request): Promise<Response> {
   try {
@@ -150,3 +161,5 @@ async function parseWithGemini(text: string, apiKey: string): Promise<string> {
 
   return parsed || text;
 }
+=======
+>>>>>>> theirs

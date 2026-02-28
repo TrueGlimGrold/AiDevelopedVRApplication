@@ -2,9 +2,22 @@
   "name": "quest-phone-capture-prototype",
   "version": "0.1.0",
   "private": true,
+<<<<<<< ours
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",
     "start": "bun run src/server.ts"
+=======
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tesseract.js": "5.1.0"
+>>>>>>> theirs
   }
 }

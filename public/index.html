@@ -18,6 +18,10 @@
 
       <section class="card">
         <h2>Capture</h2>
+<<<<<<< ours
+=======
+        <p>Text mode now runs handwriting-enhanced OCR preprocessing automatically.</p>
+>>>>>>> theirs
         <label>Output Mode
           <select id="modeSelect">
             <option value="text">Text</option>
@@ -30,6 +34,7 @@
             <option value="grayscale">Grayscale</option>
           </select>
         </label>
+<<<<<<< ours
         <div class="camera-controls">
           <button id="openCameraBtn" type="button">Open Camera</button>
           <button id="takePhotoBtn" type="button" disabled>Take Photo</button>
@@ -37,13 +42,19 @@
           <p id="cameraStatus">Camera inactive</p>
         </div>
         <video id="cameraPreview" playsinline autoplay muted class="camera-preview hidden"></video>
+=======
+>>>>>>> theirs
         <input id="captureInput" type="file" accept="image/*" capture="environment" />
       </section>
 
       <section class="card">
         <h2>Quest Upload</h2>
         <label>WebSocket URL
+<<<<<<< ours
           <input id="wsUrl" type="text" placeholder="ws://<server-ip>:3000/ws/upload" />
+=======
+          <input id="wsUrl" type="text" value="ws://localhost:3000/ws/upload" />
+>>>>>>> theirs
         </label>
         <button id="connectBtn">Connect</button>
         <button id="uploadBtn">Upload Session</button>

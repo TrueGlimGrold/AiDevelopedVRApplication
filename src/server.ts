@@ -30,6 +30,7 @@ type AckMessage = {
 };
 
 const server = Bun.serve<{ path: string }>({
+  hostname: "0.0.0.0",
   port: Number(process.env.PORT ?? 3000),
   async fetch(req, server) {
     const url = new URL(req.url);

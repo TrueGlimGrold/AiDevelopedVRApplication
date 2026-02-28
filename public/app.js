@@ -22,6 +22,10 @@ let captures = [];
 let ws = null;
 let ackWaiters = new Map();
 
+if (!wsUrlInput.value.trim()) {
+  wsUrlInput.value = buildDefaultWsUrl();
+}
+
 refreshSessionLabel();
 renderCaptures();
 
@@ -250,6 +254,11 @@ function waitForAck(captureId) {
       resolve(true);
     });
   });
+}
+
+function buildDefaultWsUrl() {
+  const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${wsProtocol}://${window.location.host}/ws/upload`;
 }
 
 async function parseTextWithGemini(text) {

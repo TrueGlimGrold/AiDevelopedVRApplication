@@ -1,0 +1,81 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #f2f5f8;
+  background: #12161d;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+
+.card {
+  background: #1a2029;
+  border: 1px solid #2b3340;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+select,
+input,
+button,
+textarea {
+  width: 100%;
+  margin-top: 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #414c5c;
+  background: #0f141c;
+  color: #e9eff6;
+  padding: 0.6rem;
+}
+
+button {
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.capture-item {
+  border: 1px solid #323d4c;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.capture-image {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid #3b4554;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-preview {
+  white-space: pre-wrap;
+  background: #0d1219;
+  border: 1px solid #3a4555;
+  border-radius: 6px;
+  padding: 0.6rem;
+}
+
+.warn {
+  color: #f3bf4f;
+}
+
+.low {
+  color: #ff7d7d;
+}
+
+.good {
+  color: #7ce9a1;
+}

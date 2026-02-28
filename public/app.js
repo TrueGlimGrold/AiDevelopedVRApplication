@@ -2,6 +2,11 @@ const sessionLabel = document.getElementById("sessionLabel");
 const modeSelect = document.getElementById("modeSelect");
 const styleSelect = document.getElementById("styleSelect");
 const captureInput = document.getElementById("captureInput");
+const openCameraBtn = document.getElementById("openCameraBtn");
+const takePhotoBtn = document.getElementById("takePhotoBtn");
+const closeCameraBtn = document.getElementById("closeCameraBtn");
+const cameraStatus = document.getElementById("cameraStatus");
+const cameraPreview = document.getElementById("cameraPreview");
 const capturesEl = document.getElementById("captures");
 const template = document.getElementById("captureTemplate");
 const wsUrlInput = document.getElementById("wsUrl");
@@ -21,6 +26,7 @@ let sessionId = buildSessionId();
 let captures = [];
 let ws = null;
 let ackWaiters = new Map();
+let cameraStream = null;
 
 if (!wsUrlInput.value.trim()) {
   wsUrlInput.value = buildDefaultWsUrl();
@@ -38,6 +44,9 @@ newSessionBtn.addEventListener("click", () => {
 
 connectBtn.addEventListener("click", connectSocket);
 uploadBtn.addEventListener("click", uploadSession);
+openCameraBtn.addEventListener("click", openCamera);
+takePhotoBtn.addEventListener("click", takePhotoFromCamera);
+closeCameraBtn.addEventListener("click", closeCamera);
 doneBtn.addEventListener("click", () => {
   captures = [];
   renderCaptures();
@@ -47,12 +56,32 @@ captureInput.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
+  await addCaptureFromBlob(file);
+  captureInput.value = "";
+});
+
+function buildSessionId() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `session_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+
+function buildDefaultWsUrl() {
+  const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${wsProtocol}://${window.location.host}/ws/upload`;
+}
+
+function refreshSessionLabel() {
+  sessionLabel.textContent = `Current session: ${sessionId}`;
+}
+
+async function addCaptureFromBlob(blobLike) {
   const mode = modeSelect.value;
   const imageStyle = styleSelect.value;
   const timestamp = new Date().toISOString();
   const id = `capture_${timestamp}_${Math.random().toString(16).slice(2, 8)}`;
 
-  const processedBlob = await processImage(file, imageStyle);
+  const processedBlob = await processImage(blobLike, imageStyle);
   const imageRef = `./images/${id}.png`;
   const dataUrl = await blobToDataUrl(processedBlob);
 
@@ -81,17 +110,6 @@ captureInput.addEventListener("change", async (event) => {
   captures.push(capture);
   captures.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   renderCaptures();
-  captureInput.value = "";
-});
-
-function buildSessionId() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  return `session_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-}
-
-function refreshSessionLabel() {
-  sessionLabel.textContent = `Current session: ${sessionId}`;
 }
 
 async function processImage(file, style) {
@@ -126,6 +144,71 @@ async function runOcr(dataUrl) {
   };
 }
 
+async function openCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    cameraStatus.textContent = "Camera API not available in this browser.";
+    return;
+  }
+
+  if (cameraStream) return;
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" }
+      },
+      audio: false
+    });
+
+    cameraStream = stream;
+    cameraPreview.srcObject = stream;
+    cameraPreview.classList.remove("hidden");
+    takePhotoBtn.disabled = false;
+    closeCameraBtn.disabled = false;
+    openCameraBtn.disabled = true;
+    cameraStatus.textContent = "Camera ready";
+  } catch {
+    cameraStatus.textContent = "Unable to access camera. Use file capture instead.";
+  }
+}
+
+async function takePhotoFromCamera() {
+  if (!cameraStream || !cameraPreview.videoWidth || !cameraPreview.videoHeight) {
+    cameraStatus.textContent = "Camera not ready yet.";
+    return;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = cameraPreview.videoWidth;
+  canvas.height = cameraPreview.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png", 1));
+  if (!blob) {
+    cameraStatus.textContent = "Could not capture photo.";
+    return;
+  }
+
+  cameraStatus.textContent = "Processing capture...";
+  await addCaptureFromBlob(blob);
+  cameraStatus.textContent = "Photo captured";
+}
+
+function closeCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+    cameraStream = null;
+  }
+
+  cameraPreview.srcObject = null;
+  cameraPreview.classList.add("hidden");
+  takePhotoBtn.disabled = true;
+  closeCameraBtn.disabled = true;
+  openCameraBtn.disabled = false;
+  cameraStatus.textContent = "Camera inactive";
+}
+
 function blobToDataUrl(blob) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -145,7 +228,7 @@ function renderCaptures() {
   captures.forEach((capture) => {
     const node = template.content.cloneNode(true);
     node.querySelector(".capture-title").textContent = capture.id;
-    node.querySelector(".capture-meta").textContent = `${capture.mode.toUpperCase()} • ${capture.imageStyle} • ${capture.timestamp} • ${capture.status}`;
+    node.querySelector(".capture-meta").textContent = `${capture.mode.toUpperCase()} | ${capture.imageStyle} | ${capture.timestamp} | ${capture.status}`;
     const image = node.querySelector(".capture-image");
     image.src = capture.dataUrl;
 
@@ -254,11 +337,6 @@ function waitForAck(captureId) {
       resolve(true);
     });
   });
-}
-
-function buildDefaultWsUrl() {
-  const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-  return `${wsProtocol}://${window.location.host}/ws/upload`;
 }
 
 async function parseTextWithGemini(text) {

@@ -46,6 +46,26 @@ button {
   margin-bottom: 0.5rem;
 }
 
+.camera-controls {
+  margin-bottom: 0.75rem;
+}
+
+.camera-controls button {
+  margin-top: 0.35rem;
+}
+
+.camera-preview {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #3b4554;
+  margin: 0.25rem 0 0.75rem;
+  background: #0d1219;
+}
+
+.hidden {
+  display: none;
+}
+
 .capture-item {
   border: 1px solid #323d4c;
   border-radius: 8px;

@@ -30,6 +30,13 @@
             <option value="grayscale">Grayscale</option>
           </select>
         </label>
+        <div class="camera-controls">
+          <button id="openCameraBtn" type="button">Open Camera</button>
+          <button id="takePhotoBtn" type="button" disabled>Take Photo</button>
+          <button id="closeCameraBtn" type="button" disabled>Close Camera</button>
+          <p id="cameraStatus">Camera inactive</p>
+        </div>
+        <video id="cameraPreview" playsinline autoplay muted class="camera-preview hidden"></video>
         <input id="captureInput" type="file" accept="image/*" capture="environment" />
       </section>
 

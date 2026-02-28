@@ -68,7 +68,8 @@ captureInput.addEventListener("change", async (event) => {
   if (mode === "text") {
     const ocr = await runOcr(dataUrl);
     capture.ocr = ocr;
-    capture.markdown = `${ocr.text.trim()}\n\n![source](${imageRef})`;
+    const parsed = await parseTextWithGemini(ocr.text || "");
+    capture.markdown = `${parsed.trim()}\n\n![source](${imageRef})`;
   } else {
     capture.markdown = `![source](${imageRef})`;
   }
@@ -249,4 +250,26 @@ function waitForAck(captureId) {
       resolve(true);
     });
   });
+}
+
+async function parseTextWithGemini(text) {
+  const raw = String(text || "").trim();
+  if (!raw) return "";
+
+  try {
+    const response = await fetch("/api/parse-text", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: raw })
+    });
+
+    if (!response.ok) {
+      return raw;
+    }
+
+    const data = await response.json();
+    return String(data.parsedText || raw);
+  } catch {
+    return raw;
+  }
 }

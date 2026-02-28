@@ -1,6 +1,16 @@
 import { join } from "node:path";
 
 const publicDir = join(process.cwd(), "public");
+const GEMINI_MODEL = "gemini-2.0-flash";
+
+type ParseTextRequest = {
+  text: string;
+};
+
+type ParseTextResponse = {
+  parsedText: string;
+  provider: "gemini" | "ocr";
+};
 
 type UploadMessage = {
   type: "capture_item";
@@ -21,8 +31,12 @@ type AckMessage = {
 
 const server = Bun.serve<{ path: string }>({
   port: Number(process.env.PORT ?? 3000),
-  fetch(req, server) {
+  async fetch(req, server) {
     const url = new URL(req.url);
+
+    if (url.pathname === "/api/parse-text" && req.method === "POST") {
+      return handleParseText(req);
+    }
 
     if (url.pathname === "/ws/upload") {
       const upgraded = server.upgrade(req, { data: { path: url.pathname } });
@@ -68,3 +82,70 @@ const server = Bun.serve<{ path: string }>({
 });
 
 console.log(`Prototype app running at http://localhost:${server.port}`);
+
+async function handleParseText(req: Request): Promise<Response> {
+  try {
+    const body = (await req.json()) as ParseTextRequest;
+    const text = String(body?.text ?? "").trim();
+    if (!text) {
+      return Response.json({ error: "Missing text." }, { status: 400 });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      const fallback: ParseTextResponse = { parsedText: text, provider: "ocr" };
+      return Response.json(fallback);
+    }
+
+    const parsedText = await parseWithGemini(text, apiKey);
+    const response: ParseTextResponse = { parsedText, provider: "gemini" };
+    return Response.json(response);
+  } catch {
+    return Response.json({ error: "Unable to parse text." }, { status: 500 });
+  }
+}
+
+async function parseWithGemini(text: string, apiKey: string): Promise<string> {
+  const prompt = [
+    "You are fixing OCR text from an image capture.",
+    "Return plain text only.",
+    "Correct obvious OCR mistakes, preserve original meaning, and preserve line breaks where appropriate.",
+    "",
+    "OCR text:",
+    text
+  ].join("\n");
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1
+        }
+      })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Gemini request failed: ${response.status}`);
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{ text?: string }>;
+      };
+    }>;
+  };
+
+  const parsed =
+    data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text ?? "")
+      .join("")
+      .trim() ?? "";
+
+  return parsed || text;
+}
